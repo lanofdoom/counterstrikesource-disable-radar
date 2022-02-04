@@ -6,6 +6,7 @@ public const Plugin myinfo = {
     url = "https://github.com/lanofdoom/counterstrikesource-disable-radar"};
 
 static const float kInfinteTime = 3600.0;
+static const float kDisableTime = 0.5;
 static const float kFlashReduction = 0.1;
 static const float kFlashMaxAlpha = 0.5;
 
@@ -17,6 +18,11 @@ static ConVar g_friendlyfire_cvar;
 
 static void HideRadar(int client) {
   SetEntPropFloat(client, Prop_Send, "m_flFlashDuration", kInfinteTime);
+  SetEntPropFloat(client, Prop_Send, "m_flFlashMaxAlpha", kFlashMaxAlpha);
+}
+
+static void ShowRadar(int client) {
+  SetEntPropFloat(client, Prop_Send, "m_flFlashDuration", kDisableTime);
   SetEntPropFloat(client, Prop_Send, "m_flFlashMaxAlpha", kFlashMaxAlpha);
 }
 
@@ -83,6 +89,21 @@ static void OnPlayerBlind(Handle event, const char[] name, bool dontBroadcast) {
   CreateTimer(flash_time, OnBlindEnd, userid, TIMER_FLAG_NO_MAPCHANGE);
 }
 
+static void OnCvarChange(Handle convar, const char[] old_value,
+                         const char[] new_value) {
+  for (int client = 1; client <= MaxClients; client++) {
+    if (!IsClientInGame(client)) {
+      continue;
+    }
+
+    if (GetConVarBool(convar)) {
+      HideRadar(client);
+    } else {
+      ShowRadar(client);
+    }
+  }
+}
+
 //
 // Forwards
 //
@@ -94,6 +115,7 @@ public void OnPluginStart() {
     ThrowError("Initialization failed");
   }
 
+  HookConVarChange(g_friendlyfire_cvar, OnCvarChange);
   HookEvent("player_spawn", OnPlayerSpawn, EventHookMode_Pre);
   HookEvent("player_blind", OnPlayerBlind);
 }

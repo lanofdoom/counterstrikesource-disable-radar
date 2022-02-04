@@ -6,7 +6,7 @@ public const Plugin myinfo = {
     url = "https://github.com/lanofdoom/counterstrikesource-disable-radar"};
 
 static const float kInfinteTime = 3600.0;
-static const float kDisableTime = 0.5;
+static const float kDisableTime = 0.1;
 static const float kFlashReduction = 0.1;
 static const float kFlashMaxAlpha = 0.5;
 

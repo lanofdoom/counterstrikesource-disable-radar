@@ -119,3 +119,17 @@ public void OnPluginStart() {
   HookEvent("player_spawn", OnPlayerSpawn, EventHookMode_Pre);
   HookEvent("player_blind", OnPlayerBlind);
 }
+
+public void OnPluginEnd() {
+  if (!GetConVarBool(g_friendlyfire_cvar)) {
+    return;
+  }
+
+  for (int client = 1; client <= MaxClients; client++) {
+    if (!IsClientInGame(client)) {
+      continue;
+    }
+
+    ShowRadar(client);
+  }
+}

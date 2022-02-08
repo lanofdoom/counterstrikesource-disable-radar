@@ -9,5 +9,5 @@ Copy ``lan_of_doom_disable_radar.smx`` to your server's
 ``css/cstrike/addons/sourcemod/plugins`` directory.
 
 # Console Variables
-
-``mp_friendlyfire`` If ``1``, radar is disabled for all players.
+``sm_lanofdoom_radar_disabled`` If ``1``, radar is disabled for all players.
+``1`` by default.

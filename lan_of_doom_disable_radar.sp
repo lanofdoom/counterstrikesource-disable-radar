@@ -1,3 +1,4 @@
+#include <sdkhooks>
 #include <sourcemod>
 
 public const Plugin myinfo = {
@@ -45,24 +46,16 @@ static Action OnBlindEnd(Handle timer, any userid) {
 // Hooks
 //
 
-static Action OnPlayerSpawn(Handle event, const char[] name,
-                            bool dontBroadcast) {
+static void OnPlayerSpawnPost(int client) {
   if (!GetConVarBool(g_radar_disabled_cvar)) {
-    return Plugin_Continue;
-  }
-
-  int userid = GetEventInt(event, "userid");
-  if (!userid) {
-    return Plugin_Continue;
-  }
-
-  int client = GetClientOfUserId(userid);
-  if (!client) {
-    return Plugin_Continue;
+    return;
   }
 
   HideRadar(client);
+}
 
+static Action OnPlayerSpawn(int client) {
+  OnPlayerSpawnPost(client);
   return Plugin_Continue;
 }
 
@@ -108,12 +101,16 @@ static void OnCvarChange(Handle convar, const char[] old_value,
 // Forwards
 //
 
+public void OnClientPutInServer(int client) {
+  SDKHook(client, SDKHook_SpawnPost, OnPlayerSpawnPost);
+  SDKHook(client, SDKHook_Spawn, OnPlayerSpawn);
+}
+
 public void OnPluginStart() {
   g_radar_disabled_cvar = CreateConVar("sm_lanofdoom_radar_disabled", "1",
                                        "If true, player radar is disabled.");
 
   HookConVarChange(g_radar_disabled_cvar, OnCvarChange);
-  HookEvent("player_spawn", OnPlayerSpawn, EventHookMode_Pre);
   HookEvent("player_blind", OnPlayerBlind);
 
   if (!GetConVarBool(g_radar_disabled_cvar)) {

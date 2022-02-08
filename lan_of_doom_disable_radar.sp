@@ -62,6 +62,9 @@ static Action EnsureFlashed(Handle timer, any userid) {
   }
 
   float flash_time = GetEntPropFloat(client, Prop_Send, "m_flFlashDuration");
+  PrintToServer("EnsureFlashed: %f %f",
+                flash_time,
+                GetEntPropFloat(client, Prop_Send, "m_flFlashMaxAlpha"));
   if (flash_time != 0.0) {
     return Plugin_Stop;
   }

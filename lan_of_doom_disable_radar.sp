@@ -1,4 +1,3 @@
-#include <sdkhooks>
 #include <sourcemod>
 
 public const Plugin myinfo = {

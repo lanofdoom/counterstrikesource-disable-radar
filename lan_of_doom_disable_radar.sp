@@ -52,6 +52,26 @@ static Action OnBlindEnd(Handle timer, any userid) {
   return Plugin_Stop;
 }
 
+static Action EnsureFlashed(Handle timer, any userid) {
+  if (!GetConVarBool(g_radar_disabled_cvar)) {
+    return Plugin_Stop;
+  }
+
+  int client = GetClientOfUserId(userid);
+  if (!client) {
+    return Plugin_Stop;
+  }
+
+  float flash_time = GetEntPropFloat(client, Prop_Send, "m_flFlashDuration");
+  if (flash_time != 0.0) {
+    return Plugin_Stop;
+  }
+
+  HideRadar(client);
+
+  return Plugin_Stop;
+}
+
 //
 // Hooks
 //
@@ -66,6 +86,8 @@ static Action OnPlayerSpawn(Handle event, const char[] name,
   if (!userid) {
     return Plugin_Continue;
   }
+
+  CreateTimer(kFlashReduction, EnsureFlashed, userid, TIMER_FLAG_NO_MAPCHANGE);
 
   int client = GetClientOfUserId(userid);
   if (!client) {

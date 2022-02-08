@@ -18,17 +18,23 @@ static ConVar g_radar_disabled_cvar;
 //
 
 static void HideRadar(int client) {
-  PrintToServer("Hide Radar: %f %f", 
-                GetEntPropFloat(client, Prop_Send, "m_flFlashDuration"),
-                GetEntPropFloat(client, Prop_Send, "m_flFlashMaxAlpha"));
   SetEntPropFloat(client, Prop_Send, "m_flFlashDuration", kInfinteTime);
   SetEntPropFloat(client, Prop_Send, "m_flFlashMaxAlpha", kFlashMaxAlpha);
 }
 
 static void ShowRadar(int client) {
-  PrintToServer("Show Radar");
   SetEntPropFloat(client, Prop_Send, "m_flFlashDuration", kDisableTime);
   SetEntPropFloat(client, Prop_Send, "m_flFlashMaxAlpha", kFlashMaxAlpha);
+}
+
+static void HideRadarForAll() {
+  for (int client = 1; client <= MaxClients; client++) {
+    if (!IsClientInGame(client)) {
+      continue;
+    }
+
+    HideRadar(client);
+  }
 }
 
 static Action OnBlindEnd(Handle timer, any userid) {
@@ -50,16 +56,24 @@ static Action OnBlindEnd(Handle timer, any userid) {
 // Hooks
 //
 
-static void OnPlayerSpawnPost(int client) {
+static Action OnPlayerSpawn(Handle event, const char[] name,
+                            bool dontBroadcast) {
   if (!GetConVarBool(g_radar_disabled_cvar)) {
-    return;
+    return Plugin_Continue;
+  }
+
+  int userid = GetEventInt(event, "userid");
+  if (!userid) {
+    return Plugin_Continue;
+  }
+
+  int client = GetClientOfUserId(userid);
+  if (!client) {
+    return Plugin_Continue;
   }
 
   HideRadar(client);
-}
 
-static Action OnPlayerSpawn(int client) {
-  OnPlayerSpawnPost(client);
   return Plugin_Continue;
 }
 
@@ -86,6 +100,15 @@ static void OnPlayerBlind(Handle event, const char[] name, bool dontBroadcast) {
   CreateTimer(flash_time, OnBlindEnd, userid, TIMER_FLAG_NO_MAPCHANGE);
 }
 
+static void OnRoundStart(Handle event, const char[] name,
+                           bool dontBroadcast) {
+  if (!GetConVarBool(g_radar_disabled_cvar)) {
+    return;
+  }
+
+  HideRadarForAll();
+}
+
 static void OnCvarChange(Handle convar, const char[] old_value,
                          const char[] new_value) {
   for (int client = 1; client <= MaxClients; client++) {
@@ -105,29 +128,20 @@ static void OnCvarChange(Handle convar, const char[] old_value,
 // Forwards
 //
 
-public void OnClientPutInServer(int client) {
-  SDKHook(client, SDKHook_SpawnPost, OnPlayerSpawnPost);
-  SDKHook(client, SDKHook_Spawn, OnPlayerSpawn);
-}
-
 public void OnPluginStart() {
   g_radar_disabled_cvar = CreateConVar("sm_lanofdoom_radar_disabled", "1",
                                        "If true, player radar is disabled.");
 
   HookConVarChange(g_radar_disabled_cvar, OnCvarChange);
   HookEvent("player_blind", OnPlayerBlind);
+  HookEvent("player_spawn", OnPlayerSpawn, EventHookMode_Pre);
+  HookEvent("round_start", OnRoundStart);
 
   if (!GetConVarBool(g_radar_disabled_cvar)) {
     return;
   }
 
-  for (int client = 1; client <= MaxClients; client++) {
-    if (!IsClientInGame(client)) {
-      continue;
-    }
-
-    HideRadar(client);
-  }
+  HideRadarForAll()
 }
 
 public void OnPluginEnd() {

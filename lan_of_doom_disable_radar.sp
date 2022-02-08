@@ -1,3 +1,4 @@
+#include <cstrike>
 #include <sourcemod>
 
 public const Plugin myinfo = {
@@ -26,32 +27,7 @@ static void ShowRadar(int client) {
   SetEntPropFloat(client, Prop_Send, "m_flFlashMaxAlpha", kFlashMaxAlpha);
 }
 
-static void HideRadarForAll() {
-  for (int client = 1; client <= MaxClients; client++) {
-    if (!IsClientInGame(client)) {
-      continue;
-    }
-
-    HideRadar(client);
-  }
-}
-
 static Action OnBlindEnd(Handle timer, any userid) {
-  if (!GetConVarBool(g_radar_disabled_cvar)) {
-    return Plugin_Stop;
-  }
-
-  int client = GetClientOfUserId(userid);
-  if (!client) {
-    return Plugin_Stop;
-  }
-
-  HideRadar(client);
-
-  return Plugin_Stop;
-}
-
-static Action EnsureFlashed(Handle timer, any userid) {
   if (!GetConVarBool(g_radar_disabled_cvar)) {
     return Plugin_Stop;
   }
@@ -81,10 +57,13 @@ static Action OnPlayerSpawn(Handle event, const char[] name,
     return Plugin_Continue;
   }
 
-  CreateTimer(kFlashReduction, EnsureFlashed, userid, TIMER_FLAG_NO_MAPCHANGE);
-
   int client = GetClientOfUserId(userid);
   if (!client) {
+    return Plugin_Continue;
+  }
+
+  int team = GetClientTeam(client);
+  if (team != CS_TEAM_T && team != CS_TEAM_CT) {
     return Plugin_Continue;
   }
 
@@ -116,15 +95,6 @@ static void OnPlayerBlind(Handle event, const char[] name, bool dontBroadcast) {
   CreateTimer(flash_time, OnBlindEnd, userid, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-static void OnRoundStart(Handle event, const char[] name,
-                           bool dontBroadcast) {
-  if (!GetConVarBool(g_radar_disabled_cvar)) {
-    return;
-  }
-
-  HideRadarForAll();
-}
-
 static void OnCvarChange(Handle convar, const char[] old_value,
                          const char[] new_value) {
   for (int client = 1; client <= MaxClients; client++) {
@@ -151,13 +121,18 @@ public void OnPluginStart() {
   HookConVarChange(g_radar_disabled_cvar, OnCvarChange);
   HookEvent("player_blind", OnPlayerBlind);
   HookEvent("player_spawn", OnPlayerSpawn, EventHookMode_Pre);
-  HookEvent("round_start", OnRoundStart);
 
   if (!GetConVarBool(g_radar_disabled_cvar)) {
     return;
   }
 
-  HideRadarForAll()
+  for (int client = 1; client <= MaxClients; client++) {
+    if (!IsClientInGame(client)) {
+      continue;
+    }
+
+    HideRadar(client);
+  }
 }
 
 public void OnPluginEnd() {

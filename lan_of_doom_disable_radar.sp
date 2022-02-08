@@ -10,7 +10,7 @@ static const float kDisableTime = 0.1;
 static const float kFlashReduction = 0.1;
 static const float kFlashMaxAlpha = 0.5;
 
-static ConVar g_friendlyfire_cvar;
+static ConVar g_radar_disabled_cvar;
 
 //
 // Logic
@@ -27,7 +27,7 @@ static void ShowRadar(int client) {
 }
 
 static Action OnBlindEnd(Handle timer, any userid) {
-  if (!GetConVarBool(g_friendlyfire_cvar)) {
+  if (!GetConVarBool(g_radar_disabled_cvar)) {
     return Plugin_Stop;
   }
 
@@ -47,7 +47,7 @@ static Action OnBlindEnd(Handle timer, any userid) {
 
 static Action OnPlayerSpawn(Handle event, const char[] name,
                             bool dontBroadcast) {
-  if (!GetConVarBool(g_friendlyfire_cvar)) {
+  if (!GetConVarBool(g_radar_disabled_cvar)) {
     return Plugin_Continue;
   }
 
@@ -67,7 +67,7 @@ static Action OnPlayerSpawn(Handle event, const char[] name,
 }
 
 static void OnPlayerBlind(Handle event, const char[] name, bool dontBroadcast) {
-  if (!GetConVarBool(g_friendlyfire_cvar)) {
+  if (!GetConVarBool(g_radar_disabled_cvar)) {
     return;
   }
 
@@ -109,17 +109,14 @@ static void OnCvarChange(Handle convar, const char[] old_value,
 //
 
 public void OnPluginStart() {
-  g_friendlyfire_cvar = FindConVar("mp_friendlyfire");
+  g_radar_disabled_cvar = CreateConVar("sm_lanofdoom_radar_disabled", "1",
+                                       "If true, player radar is disabled.");
 
-  if (!g_friendlyfire_cvar) {
-    ThrowError("Initialization failed");
-  }
-
-  HookConVarChange(g_friendlyfire_cvar, OnCvarChange);
+  HookConVarChange(g_radar_disabled_cvar, OnCvarChange);
   HookEvent("player_spawn", OnPlayerSpawn, EventHookMode_Pre);
   HookEvent("player_blind", OnPlayerBlind);
 
-  if (!GetConVarBool(g_friendlyfire_cvar)) {
+  if (!GetConVarBool(g_radar_disabled_cvar)) {
     return;
   }
 
@@ -133,7 +130,7 @@ public void OnPluginStart() {
 }
 
 public void OnPluginEnd() {
-  if (!GetConVarBool(g_friendlyfire_cvar)) {
+  if (!GetConVarBool(g_radar_disabled_cvar)) {
     return;
   }
 

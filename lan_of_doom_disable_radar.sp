@@ -47,6 +47,7 @@ static Action OnBlindEnd(Handle timer, any userid) {
 //
 
 static void OnPlayerSpawnPost(int client) {
+  PrintToServer("OnPlayerSpawnPost: %d", GetConVarBool(g_radar_disabled_cvar));
   if (!GetConVarBool(g_radar_disabled_cvar)) {
     return;
   }
@@ -55,6 +56,7 @@ static void OnPlayerSpawnPost(int client) {
 }
 
 static Action OnPlayerSpawn(int client) {
+  PrintToServer("OnPlayerSpawn: %d", GetConVarBool(g_radar_disabled_cvar));
   OnPlayerSpawnPost(client);
   return Plugin_Continue;
 }
@@ -84,6 +86,7 @@ static void OnPlayerBlind(Handle event, const char[] name, bool dontBroadcast) {
 
 static void OnCvarChange(Handle convar, const char[] old_value,
                          const char[] new_value) {
+  PrintToServer("OnCvarChange: %d", GetConVarBool(convar));
   for (int client = 1; client <= MaxClients; client++) {
     if (!IsClientInGame(client)) {
       continue;
@@ -113,6 +116,7 @@ public void OnPluginStart() {
   HookConVarChange(g_radar_disabled_cvar, OnCvarChange);
   HookEvent("player_blind", OnPlayerBlind);
 
+  PrintToServer("OnPluginStart: %d", GetConVarBool(g_radar_disabled_cvar));
   if (!GetConVarBool(g_radar_disabled_cvar)) {
     return;
   }

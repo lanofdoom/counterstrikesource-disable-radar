@@ -10,13 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Compile plugin
+      - name: Build
         run: ./build.sh
 
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@3.7.1
+      - name: Collect Artifacts
+        uses: actions/upload-artifact@v3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: build
-          TARGET_FOLDER: releases/nightly
+          name: output
+          path: build
